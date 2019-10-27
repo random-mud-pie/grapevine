@@ -3,10 +3,10 @@ defmodule Grapevine.Client.Tells do
   Implementation details for the Tells GenServer
   """
 
-  alias Grapevine.Accounts
-  alias Grapevine.Characters
+  alias GrapevineData.Accounts
+  alias GrapevineData.Characters
   alias Grapevine.Client
-  alias Grapevine.Games
+  alias GrapevineData.Games
 
   @doc """
   Receive a tell
@@ -17,7 +17,9 @@ defmodule Grapevine.Client.Tells do
         register_character(from_game, from_player, message)
 
       _ ->
-        message = "Hello! This is Grapevine. Please checkout https://grapevine.haus/ for information on how to register a character."
+        message =
+          "Hello! This is Grapevine. Please checkout https://grapevine.haus/ for information on how to register a character."
+
         Client.send_tell(from_game, from_player, message)
     end
   end

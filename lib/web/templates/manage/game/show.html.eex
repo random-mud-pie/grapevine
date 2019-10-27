@@ -23,6 +23,9 @@
       <%= link("Achievements", to: manage_game_achievement_path(@conn, :index, @game.id), class: "btn btn-flat") %>
       <%= link("Client", to: manage_game_client_path(@conn, :show, @game.id), class: "btn btn-flat") %>
       <%= link("Events", to: manage_game_event_path(@conn, :index, @game.id), class: "btn btn-flat") %>
+      <%= if @game.site_cname do %>
+        <%= link("Hosted Site", to: Routes.manage_game_hosted_site_path(@conn, :show, @game.id), class: "btn btn-flat") %>
+      <% end %>
     </div>
   </nav>
 
@@ -41,11 +44,23 @@
           The server is running <code><%= @game.user_agent %></code>.
         <% end %>
 
+        <%= if @game.discord_invite_url do %>
+          <div>Discord invite: <%= link(@game.discord_invite_url, to: @game.discord_invite_url) %></div>
+        <% end %>
+
         <div>
           <%= if @game.display do %>
             <%= @game.name %> <b>will</b> display in connected list.
           <% else %>
             <%= @game.name %> <b>will not</b> display in connected list.
+          <% end %>
+        </div>
+
+        <div>
+          <%= if @game.display_players do %>
+            <%= @game.name %> <b>will</b> display players in connected list.
+          <% else %>
+            <%= @game.name %> <b>will not</b> display players in connected list.
           <% end %>
         </div>
 
@@ -74,6 +89,14 @@
             <% end %>
           </div>
         <% end %>
+
+        <div>
+          <%= if @game.send_connection_failure_alerts do %>
+            You <b>will</b> receive emails on connection failures, possibly every hour.
+          <% else %>
+            You <b>will not</b> receive emails on connection failures.
+          <% end %>
+        </div>
 
         <hr />
 

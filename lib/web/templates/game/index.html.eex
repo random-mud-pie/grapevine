@@ -37,6 +37,11 @@
           <%= submit "Search", class: "btn btn-primary" %>
           <%= link("Clear", to: game_path(@conn, :index), class: "btn btn-flat") %>
         <% end %>
+
+        <hr />
+
+        <%= link("Surprise Me!", to: game_path(@conn, :surprise), class: "btn btn-primary mr-1") %>
+        <%= link("Surprise Me & Play!", to: game_path(@conn, :surprise, play: true), class: "btn btn-primary") %>
       </div>
     </div>
 
@@ -67,7 +72,9 @@
         <% end) %>
       </ul>
 
-      <p><%= Enum.count(@games) %> Games</p>
+      <p><%= @pagination.total_count %> Games</p>
+
+      <%= SharedView.pagination(path: Routes.game_path(@conn, :index, games: @filter), pagination: @pagination) %>
     </div>
   </div>
 </section>

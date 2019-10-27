@@ -1,6 +1,6 @@
 <section>
-  <div class="position-relative text-center">
-    <div class="col-md-6 mx-auto my-2">
+  <div class="row text-center">
+    <div class="col-md-6 my-2">
       <h1 class="display-4 font-weight-normal">Grapevine</h1>
       <p class="lead font-weight-normal">The MUD Community Site</p>
       <%= live_render(@conn, CurrentPlayerCountView) %>
@@ -10,6 +10,53 @@
         <% end %>
       </p>
     </div>
+
+    <%= if !Enum.empty?(@events) do %>
+      <div class="col-md-6">
+        <nav>
+          <h5 class="name">
+            Upcoming and Ongoing Events
+          </h5>
+        </nav>
+
+        <div class="list-group">
+          <%= Enum.map(@events, fn event -> %>
+            <div class="list-group-item">
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                  <%= link(event.title, to: Routes.event_path(@conn, :show, event.uid)) %>
+                </h5>
+                <small><%= TimeView.simple_day(event.start_date) %> to <%= TimeView.simple_day(event.end_date) %></small>
+              </div>
+            </div>
+          <% end) %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>
+
+<section class="mt-3">
+  <div class="playing">
+    <nav>
+      <h5 class="name">
+        People Are Playing
+      </h5>
+
+      <div class="actions">
+        <%= link( to: Routes.game_path(@conn, :index), class: "btn btn-flat") do %>
+          View More &raquo;
+        <% end %>
+      </div>
+    </nav>
+
+    <ul class="games">
+      <%= Enum.map(@active_games, fn game -> %>
+        <li class="game">
+          <%= GameView.render("_playing.html", game: game, conn: @conn) %>
+        </li>
+      <% end) %>
+    </ul>
   </div>
 </section>
 
@@ -21,30 +68,17 @@
       </h2>
 
       <div class="actions">
-        <%= link("View all", to: Routes.game_path(@conn, :index), class: "btn btn-flat") %>
+        <%= link( to: Routes.game_path(@conn, :index), class: "btn btn-flat") do %>
+          View More &raquo;
+        <% end %>
       </div>
     </nav>
 
     <ul class="games">
       <%= Enum.map(@games, fn game -> %>
-        <%= if game.display do %>
-          <li class="game">
-            <div class="container">
-              <div class="cover">
-                <%= link(to: game_path(@conn, :show, game.short_name)) do %>
-                  <%= GameView.cover_img_with_default(@conn, game) %>
-                <% end %>
-              </div>
-              <div class="information">
-                <h4 class="title">
-                  <%= link(game.name, to: game_path(@conn, :show, game.short_name)) %>
-                </h4>
-
-                <p class="tagline"><%= game.tagline %></p>
-              </div>
-            </div>
-          </li>
-        <% end %>
+        <li class="game">
+          <%= GameView.render("_featured.html", game: game, conn: @conn) %>
+        </li>
       <% end) %>
     </ul>
   </div>

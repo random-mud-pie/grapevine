@@ -1,6 +1,7 @@
 import _ from "underscore";
-import Anser from "anser";
 import {createReducer} from "reduxsauce";
+import * as ansi from "@grapevine/ansi";
+import {InputSequence} from "@grapevine/ansi/dist/models";
 
 import {Types} from "./actions";
 
@@ -10,6 +11,7 @@ const INITIAL_STATE = {
   connected: false,
   buffer: "",
   lines: [],
+  lastLine: null,
   lineId: 0,
   gmcp: {},
   oauth: null,
@@ -18,79 +20,24 @@ const INITIAL_STATE = {
   },
 }
 
-let parseText = (state, text) => {
+let appendLines = (state, lines) => {
   let increment = 0;
-  let parsedSegments = Anser.ansiToJson(text);
-
-  parsedSegments = _.reject(parsedSegments, segment => {
-    return segment.content === "";
-  });
-
-  parsedSegments = _.map(parsedSegments, segment => {
-    return _.pick(segment, ["content", "bg", "fg", "decoration"]);
-  });
-
-  // Explode each segment into separate lines
-  parsedSegments = _.map(parsedSegments, segment => {
-    let lines = segment.content.split("\n");
-
-    // There were no new lines
-    if (lines.length == 1) {
-      return [segment];
-    }
-
-    // Remove the empty item if there was a trailing newline already
-    if (_.last(lines) === "") {
-      lines.pop();
-    }
-
-    lines = _.map(lines, line => {
-      return {...segment, content: line + "\n"};
-    });
-
-    // If the segment didn't end with a new line, remove the one that
-    // is currently there
-    if (_.last(segment.content) != "\n") {
-      let line = lines.pop();
-      line.content = line.content.slice(0, line.content.length - 1);
-      lines = [...lines, line];
-    }
-
-    return lines;
-  });
-
-  parsedSegments = _.flatten(parsedSegments);
-
-  parsedSegments = _.map(parsedSegments, segment => {
-    segment.id = state.lineId + increment;
+  lines = lines.map(line => {
+    line.id = state.lineId + increment;
     increment++;
-    return segment;
+    return line;
   });
 
-  let currentLine = [];
-  let mergedLines = [];
-
-  for (let i = 0; i < parsedSegments.length; i++) {
-    let segment = parsedSegments[i];
-
-    if (_.last(segment.content) === "\n") {
-      currentLine.push(segment);
-      mergedLines.push(currentLine);
-      currentLine = [];
-    } else {
-      currentLine.push(segment);
-    }
-  }
-
-  mergedLines.push(currentLine);
-  mergedLines = _.reject(mergedLines, lines => {
-    return lines.length == 0;
-  });
-
-  let lines = [...state.lines, ...mergedLines];
+  lines = [...state.lines, ...lines];
   lines = _.last(lines, MAX_LINES);
+  let lastLine = lines.pop();
 
-  return {...state, lines: lines, lineId: state.lineId + increment};
+  return {...state, lastLine: lastLine, lines: lines, lineId: state.lineId + increment};
+};
+
+let parseText = (state, text) => {
+  let lines = ansi.parse(text, state.lastLine);
+  return appendLines(state, lines);
 };
 
 export const socketConnected = (state, action) => {
@@ -110,6 +57,12 @@ export const socketDisconnected = (state, action) => {
 export const socketEcho = (state, action) => {
   const {text} = action;
   return {...state, buffer: state.buffer + text};
+};
+
+export const socketInput = (state, action) => {
+  const {text} = action;
+  let lines = ansi.appendInput(state.lastLine, text);
+  return appendLines(state, lines);
 };
 
 export const socketGA = (state, action) => {
@@ -159,6 +112,7 @@ export const HANDLERS = {
   [Types.SOCKET_CONNECTED]: socketConnected,
   [Types.SOCKET_DISCONNECTED]: socketDisconnected,
   [Types.SOCKET_ECHO]: socketEcho,
+  [Types.SOCKET_INPUT]: socketInput,
   [Types.SOCKET_GA]: socketGA,
   [Types.SOCKET_O_AUTH_CLOSE]: socketOAuthClose,
   [Types.SOCKET_RECEIVE_CONNECTION]: socketReceiveConnection,

@@ -3,7 +3,7 @@ defmodule Web.Manage.RedirectURIController do
 
   plug(Web.Plugs.VerifyUser)
 
-  alias Grapevine.Games
+  alias GrapevineData.Games
 
   def create(conn, %{"game_id" => game_id, "redirect_uri" => %{"uri" => uri}}) do
     %{current_user: user} = conn.assigns
@@ -34,7 +34,7 @@ defmodule Web.Manage.RedirectURIController do
       _ ->
         conn
         |> put_flash(:error, "Could not delete the URI")
-        |> redirect(to: manage_game_path(conn, :index))
+        |> redirect(to: manage_setting_path(conn, :show))
     end
   end
 end

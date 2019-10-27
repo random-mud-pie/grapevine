@@ -7,6 +7,7 @@ defmodule Grapevine.Client.Server do
 
   alias Grapevine.Client.Server.State
   alias Grapevine.Client.Tells
+  alias GrapevineData.Messages
 
   @behaviour Grapevine.Client
 
@@ -22,13 +23,24 @@ defmodule Grapevine.Client.Server do
 
   @impl true
   def broadcast(message) do
-    Web.Endpoint.broadcast("channels:#{message.channel}", "channels/broadcast", %{
-      "channel" => message.channel,
-      "game" => "grapevine",
+    %{channel: channel, user: user, message: message} = message
+
+    Web.Endpoint.broadcast("channels:#{channel.name}", "channels/broadcast", %{
+      "channel" => channel.name,
+      "game" => "Grapevine",
       "game_id" => @client_id,
-      "name" => message.name,
-      "message" => message.message
+      "name" => user.username,
+      "message" => message
     })
+
+    Web.Endpoint.broadcast("chat:#{channel.name}", "broadcast", %{
+      "channel" => channel.name,
+      "game" => "Grapevine",
+      "name" => user.username,
+      "message" => message
+    })
+
+    Messages.record_web(channel, user, message)
 
     :ok
   end

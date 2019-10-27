@@ -7,9 +7,8 @@ defmodule Grapevine.Telnet.MSSPClient do
 
   alias Grapevine.Telnet.MSSPClient.Check
   alias Grapevine.Telnet.MSSPClient.Record
-  alias Telnet.Client
+  alias GrapevineTelnet.Client
   alias Telnet.MSSP
-  alias Telnet.Options
 
   @behaviour Client
 
@@ -51,7 +50,7 @@ defmodule Grapevine.Telnet.MSSPClient do
   def process_option(state, {:mssp, data}) do
     maybe_forward("mssp/received", data, state)
     state.mssp_module.record_option(state, data)
-    :telemetry.execute([:telnet, :mssp, :option, :success], 1, state)
+    :telemetry.execute([:telnet, :mssp, :option, :success], %{count: 1}, state)
 
     Logger.debug("Shutting down MSSP check", type: :mssp)
 
@@ -64,7 +63,7 @@ defmodule Grapevine.Telnet.MSSPClient do
   def receive(state, data) do
     state = Map.put(state, :mssp_buffer, Map.get(state, :mssp_buffer, "") <> data)
 
-    case Options.text_mssp?(state.mssp_buffer) do
+    case text_mssp?(state.mssp_buffer) do
       true ->
         record_text_mssp(state)
 
@@ -76,7 +75,7 @@ defmodule Grapevine.Telnet.MSSPClient do
   @impl true
   def handle_info({:text_mssp_request}, state) do
     :gen_tcp.send(state.socket, "mssp-request\n")
-    :telemetry.execute([:telnet, :mssp, :text, :sent], 1, state)
+    :telemetry.execute([:telnet, :mssp, :text, :sent], %{count: 1}, state)
 
     {:noreply, Map.put(state, :mssp_buffer, <<>>)}
   end
@@ -85,8 +84,8 @@ defmodule Grapevine.Telnet.MSSPClient do
     maybe_forward("mssp/terminated", %{}, state)
     state.mssp_module.record_fail(state)
 
-    Grapevine.Telnet.record_no_mssp(state.host, state.port)
-    :telemetry.execute([:telnet, :mssp, :failed], 1, state)
+    GrapevineData.Telnet.record_no_mssp(state.host, state.port)
+    :telemetry.execute([:telnet, :mssp, :failed], %{count: 1}, state)
 
     {:stop, :normal, state}
   end
@@ -102,7 +101,7 @@ defmodule Grapevine.Telnet.MSSPClient do
       data ->
         maybe_forward("mssp/received", data, state)
         state.mssp_module.record_text(state, data)
-        :telemetry.execute([:telnet, :mssp, :text, :success], 1, state)
+        :telemetry.execute([:telnet, :mssp, :text, :success], %{count: 1}, state)
 
         {:stop, :normal, state}
     end
@@ -118,13 +117,17 @@ defmodule Grapevine.Telnet.MSSPClient do
     end
   end
 
+  def text_mssp?(string) do
+    string =~ "MSSP-REPLY-START"
+  end
+
   defmodule Record do
     @moduledoc """
     Record player counts from MSSP
     """
 
     alias Grapevine.Games
-    alias Grapevine.Statistics
+    alias GrapevineData.Statistics
 
     def init(opts, state) do
       connection = Keyword.get(opts, :connection)
@@ -151,7 +154,7 @@ defmodule Grapevine.Telnet.MSSPClient do
       Games.connection_has_mssp(state.connection)
       maybe_set_user_agent(state, data)
 
-      players = String.to_integer(data["PLAYERS"])
+      players = String.to_integer(Map.get(data, "PLAYERS", "0"))
       Statistics.record_mssp_players(state.game, players, Timex.now())
     end
 
@@ -179,7 +182,7 @@ defmodule Grapevine.Telnet.MSSPClient do
     Check MSSP for a game
     """
 
-    alias Grapevine.Telnet
+    alias GrapevineData.Telnet
 
     def init(opts, state) do
       state

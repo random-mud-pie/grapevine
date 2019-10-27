@@ -1,8 +1,9 @@
 defmodule Web.Manage.ClientController do
   use Web, :controller
 
-  alias Grapevine.Games
-  alias Grapevine.Gauges
+  alias GrapevineData.Games
+  alias GrapevineData.GameSettings
+  alias GrapevineData.Gauges
 
   def show(conn, %{"game_id" => id}) do
     %{current_user: user} = conn.assigns
@@ -11,7 +12,7 @@ defmodule Web.Manage.ClientController do
       conn
       |> assign(:game, game)
       |> assign(:gauges, Gauges.for(game))
-      |> assign(:changeset, Games.edit_client_settings(game))
+      |> assign(:changeset, GameSettings.edit_client_settings(game))
       |> render("show.html")
     end
   end
@@ -20,7 +21,7 @@ defmodule Web.Manage.ClientController do
     %{current_user: user} = conn.assigns
     {:ok, game} = Games.get(user, id)
 
-    with {:ok, _client_settings} <- Games.update_client_settings(game, params) do
+    with {:ok, _client_settings} <- GameSettings.update_client_settings(game, params) do
       conn
       |> put_flash(:info, "Updated!")
       |> redirect(to: manage_game_client_path(conn, :show, game.id))

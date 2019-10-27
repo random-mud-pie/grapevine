@@ -1,12 +1,23 @@
 defmodule Web.GameView do
   use Web, :view
 
-  alias Grapevine.Achievements
-  alias Grapevine.Channels
-  alias Grapevine.Games.Images
-  alias Grapevine.Presence
-  alias Grapevine.UserAgents
+  alias GrapevineData.Achievements
+  alias GrapevineData.Channels
+  alias GrapevineData.Games.Images
+  alias GrapevineData.UserAgents
   alias Stein.Storage
+  alias Web.EventView
+  alias Web.SharedView
+
+  def render("index.json", assigns), do: Web.Api.GameView.render("index.json", assigns)
+
+  def render("show.json", assigns), do: Web.Api.GameView.render("show.json", assigns)
+
+  def render("game.json", assigns), do: Web.Api.GameView.render("game.json", assigns)
+
+  def render("online.json", assigns), do: Web.Api.GameView.render("online.json", assigns)
+
+  def render("presence.json", assigns), do: Web.Api.GameView.render("presence.json", assigns)
 
   def cover_img_with_default(conn, game) do
     case has_cover?(game) do
@@ -22,13 +33,19 @@ defmodule Web.GameView do
 
   def cover_img(game) do
     content_tag(:div, class: "cover") do
-      [img_tag(Storage.url(Images.cover_path(game, "thumbnail"))), content_tag(:div, "", class: "shadow")]
+      [
+        img_tag(Storage.url(Images.cover_path(game, "thumbnail")), alt: "#{game.name} Cover Image"),
+        content_tag(:div, "", class: "shadow")
+      ]
     end
   end
 
   def hero_preview_img(game) do
     content_tag(:div, class: "cover") do
-      [img_tag(Storage.url(Images.hero_path(game, "thumbnail"))), content_tag(:div, "", class: "shadow")]
+      [
+        img_tag(Storage.url(Images.hero_path(game, "thumbnail")), alt: "#{game.name} Hero Image"),
+        content_tag(:div, "", class: "shadow")
+      ]
     end
   end
 
@@ -36,13 +53,19 @@ defmodule Web.GameView do
 
   def hero_img(game) do
     content_tag(:div, class: "hero") do
-      [img_tag(Storage.url(Images.hero_path(game, "thumbnail"))), content_tag(:div, "", class: "shadow")]
+      [
+        img_tag(Storage.url(Images.hero_path(game, "thumbnail")), alt: "#{game.name} Hero Image"),
+        content_tag(:div, "", class: "shadow")
+      ]
     end
   end
 
   def default_cover_img(conn) do
     content_tag(:div, class: "cover") do
-      [img_tag(static_path(conn, "/images/default-cover.png")), content_tag(:div, "", class: "shadow")]
+      [
+        img_tag(static_path(conn, "/images/default-cover.png"), alt: "Default Game Cover"),
+        content_tag(:div, "", class: "shadow")
+      ]
     end
   end
 
@@ -94,7 +117,13 @@ defmodule Web.GameView do
   end
 
   def show_play_button?(game) do
-   web_connection?(game) || (game.enable_web_client && telnet_connection?(game))
+    web_connection?(game) ||
+      (client_enabled?(game) &&
+         (telnet_connection?(game) || secure_telnet_connection?(game)))
+  end
+
+  defp client_enabled?(game) do
+    game.enable_web_client
   end
 
   defp telnet_connection?(game) do
@@ -103,23 +132,16 @@ defmodule Web.GameView do
     end)
   end
 
+  defp secure_telnet_connection?(game) do
+    Enum.any?(game.connections, fn connection ->
+      connection.type == "secure telnet"
+    end)
+  end
+
   defp web_connection?(game) do
     Enum.any?(game.connections, fn connection ->
       connection.type == "web"
     end)
-  end
-
-  def render("online.json", %{games: games}) do
-    %{
-      collection: render_many(games, __MODULE__, "presence.json")
-    }
-  end
-
-  def render("presence.json", %{game: game}) do
-    %{
-      game: Map.take(game.game, [:name, :homepage_url]),
-      players: game.players
-    }
   end
 
   def user_agent(game) do
@@ -165,19 +187,8 @@ defmodule Web.GameView do
     end
   end
 
-  def online_players(game) do
-    presence =
-      Enum.find(Presence.online_games(), fn presence ->
-        presence.game.id == game.id
-      end)
-
-    case presence do
-      nil ->
-        []
-
-      presence ->
-        presence.players
-    end
+  def display_players?(game, players) do
+    game.display_players && !Enum.empty?(players)
   end
 
   def online_status(game) do
@@ -192,10 +203,18 @@ defmodule Web.GameView do
 
         case Timex.before?(mssp_cutoff, game.telnet_last_seen_at) do
           true ->
-            content_tag(:i, "", class: "fa fa-adjust online", alt: "Seen on MSSP", title: "Seen on MSSP")
+            content_tag(:i, "",
+              class: "fa fa-adjust online",
+              alt: "Seen on MSSP",
+              title: "Seen on MSSP"
+            )
 
           _ ->
-            content_tag(:i, "", class: "fa fa-circle offline", alt: "Game Offline", title: "Offline")
+            content_tag(:i, "",
+              class: "fa fa-circle offline",
+              alt: "Game Offline",
+              title: "Offline"
+            )
         end
     end
   end
@@ -206,10 +225,16 @@ defmodule Web.GameView do
         link(connection.url, to: connection.url, target: "_blank")
 
       "telnet" ->
-        "#{connection.host}:#{connection.port}"
+        [
+          content_tag(:div, "Host: #{connection.host}"),
+          content_tag(:div, "Port: #{connection.port}")
+        ]
 
       "secure telnet" ->
-        "#{connection.host}:#{connection.port}"
+        [
+          content_tag(:div, "Host: #{connection.host}"),
+          content_tag(:div, "Port: #{connection.port}")
+        ]
     end
   end
 end

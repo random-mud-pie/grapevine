@@ -19,7 +19,7 @@ defmodule Web.FormView do
   """
   def text_field(form, field, opts \\ [], dopts \\ []) do
     opts = Keyword.merge(opts, dopts)
-    text_opts = Keyword.take(opts, [:value, :autofocus])
+    text_opts = Keyword.take(opts, [:type, :value, :autofocus])
 
     content_tag(:div, class: form_group_classes(form, field)) do
       [
@@ -86,7 +86,7 @@ defmodule Web.FormView do
 
     content_tag(:div, class: form_group_classes(form, field)) do
       [
-        label(form, field, class: "col-md-3"),
+        field_label(form, field, opts),
         content_tag(:div, class: "col-md-9") do
           [
             textarea(form, field, Keyword.merge([class: "form-control"], textarea_opts)),
@@ -128,7 +128,7 @@ defmodule Web.FormView do
         field_label(form, field, opts),
         content_tag(:div, class: "col-md-9") do
           [
-            file_input(form, field, [class: "form-control"]),
+            file_input(form, field, class: "form-control"),
             error_tag(form, field),
             Keyword.get(opts, :do, "")
           ]

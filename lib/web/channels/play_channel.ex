@@ -3,11 +3,11 @@ defmodule Web.PlayChannel do
   Follow along with the grapevine from the site
   """
 
-  use Phoenix.Channel
+  use Web, :channel
 
-  alias Grapevine.Authorizations
-  alias Grapevine.Games
-  alias Telnet.WebClient
+  alias GrapevineData.Authorizations
+  alias GrapevineData.Games
+  alias GrapevineTelnet.WebClient
   alias Web.Game
 
   def join("play:client", message, socket) do
@@ -37,10 +37,10 @@ defmodule Web.PlayChannel do
 
   defp check_user_allowed(socket, game) do
     case Game.client_allowed?(game, socket.assigns, :user) do
-      true ->
+      {:ok, :allowed} ->
         {:ok, game}
 
-      false ->
+      {:error, _} ->
         {:error, "game is not open"}
     end
   end
@@ -48,14 +48,17 @@ defmodule Web.PlayChannel do
   def start_client(socket) do
     {:ok, connection} = Games.get_web_client_connection(socket.assigns.game)
 
-    {:ok, pid} = WebClient.connect(socket.assigns.session_token,
-      game: socket.assigns.game,
-      client_settings: socket.assigns.game.client_settings,
-      type: connection.type,
-      host: connection.host,
-      port: connection.port,
-      channel_pid: socket.channel_pid
-    )
+    {:ok, pid} =
+      WebClient.connect(socket.assigns.session_token,
+        client_ip: socket.assigns.ip,
+        game: socket.assigns.game,
+        client_settings: socket.assigns.game.client_settings,
+        type: connection.type,
+        host: connection.host,
+        port: connection.port,
+        certificate: connection.certificate,
+        channel_pid: socket.channel_pid
+      )
 
     Process.flag(:trap_exit, true)
     Process.link(pid)
@@ -72,6 +75,11 @@ defmodule Web.PlayChannel do
 
   def handle_in("send", %{"message" => message}, socket) do
     WebClient.recv(socket.assigns.client_pid, message)
+    {:noreply, socket}
+  end
+
+  def handle_in(event = "system/" <> _, params, socket) do
+    WebClient.event(socket.assigns.client_pid, event, params)
     {:noreply, socket}
   end
 

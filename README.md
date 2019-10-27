@@ -20,17 +20,18 @@ View the websocket details on [Grapevine][websocket-docs].
 
 This is only required to run Grapevine itself, the server. These are not required to connect as a game. See the above [websocket docs][websocket-docs] for connecting as a client.
 
-- PostgreSQL 10
-- Elixir 1.8.0
-- Erlang 21.2.6
+- PostgreSQL 11
+- Elixir 1.9.0
+- Erlang 22.0.4
 - node.js 10.13.0
+- [Yarn](https://yarnpkg.com/en/docs/install)
 
 ### Setup
 
 ```bash
 mix deps.get
 mix compile
-cd assets && npm install && node node_modules/brunch/bin/brunch build && cd ..
+yarn --cwd assets
 mix ecto.reset
 mix phx.server
 ```
@@ -45,16 +46,9 @@ MIX_ENV=test mix ecto.migrate
 mix test
 ```
 
-### Docker
-
-```bash
-docker-compose build grapevine
-docker-compose up -d postgres
-docker-compose run --rm grapevine migrate
-docker-compose up grapevine
-```
-
 ### Telnet Web Client
+
+Telnet connections live in the `apps/telnet` application. This node holds the telnet connections so the main application can reboot on deploys and not drop active game connections.
 
 For deployment the telnet application needs to be on its own erlang node. You can connect with something similar to:
 
@@ -75,7 +69,7 @@ config :grapevine,
 
 ## Setting up a new Play CNAME
 
-- Game sets the CNAME to `grapevine.haus`
+- Game sets the CNAME to `client.grapevine.haus`
 - Game must have a homepage url
 - Game must have the web client enabled
 - Update game's record for their CNAME

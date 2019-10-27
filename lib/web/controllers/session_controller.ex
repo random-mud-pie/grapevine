@@ -1,12 +1,13 @@
 defmodule Web.SessionController do
   use Web, :controller
 
-  alias Grapevine.Accounts
+  alias GrapevineData.Accounts
 
   def new(conn, _params) do
     changeset = Accounts.new()
 
     conn
+    |> assign(:layout_flash, false)
     |> assign(:changeset, changeset)
     |> render("new.html")
   end
@@ -14,12 +15,12 @@ defmodule Web.SessionController do
   def create(conn, %{"user" => %{"email" => email, "password" => password}}) do
     case Accounts.validate_login(email, password) do
       {:ok, user} ->
-        :telemetry.execute([:grapevine, :accounts, :session, :login], 1)
+        :telemetry.execute([:grapevine, :accounts, :session, :login], %{count: 1})
 
         conn
         |> put_flash(:info, "You have signed in.")
         |> put_session(:user_token, user.token)
-        |> after_sign_in_redirect()
+        |> after_sign_in_redirect(Routes.page_path(conn, :index))
 
       {:error, :invalid} ->
         conn
@@ -29,7 +30,7 @@ defmodule Web.SessionController do
   end
 
   def delete(conn, _params) do
-    :telemetry.execute([:grapevine, :accounts, :session, :logout], 1)
+    :telemetry.execute([:grapevine, :accounts, :session, :logout], %{count: 1})
 
     conn
     |> clear_session()
@@ -41,10 +42,10 @@ defmodule Web.SessionController do
 
   Or the home page
   """
-  def after_sign_in_redirect(conn) do
+  def after_sign_in_redirect(conn, default_path) do
     case get_session(conn, :last_path) do
       nil ->
-        conn |> redirect(to: page_path(conn, :index))
+        redirect(conn, to: default_path)
 
       path ->
         conn

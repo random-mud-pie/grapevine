@@ -3,9 +3,9 @@ defmodule Web.ChatChannel do
   Chat with users on a gossip channel
   """
 
-  use Phoenix.Channel
+  use Web, :channel
 
-  alias Grapevine.Channels
+  alias GrapevineData.Channels
   alias Grapevine.Client
   alias Grapevine.Client.Broadcast
 
@@ -36,12 +36,11 @@ defmodule Web.ChatChannel do
     %{channel: channel, user: user} = socket.assigns
 
     message = %Broadcast{
-      channel: channel.name,
-      name: user.username,
-      message: message,
+      channel: channel,
+      user: user,
+      message: message
     }
 
-    Web.Endpoint.broadcast("chat:#{message.channel}", "broadcast", message)
     Client.broadcast(message)
 
     {:noreply, socket}

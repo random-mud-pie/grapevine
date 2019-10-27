@@ -3,9 +3,11 @@ import {Provider} from 'react-redux';
 import _ from 'underscore';
 
 import Keys from './keys';
-import {store} from "./redux/store";
+import {Creators} from "./redux/actions";
+import {makeStore} from "./redux/store";
 
 import Gauges from "./components/gauges";
+import Modals from "./components/modals";
 import {OAuthAuthorization} from "./components/oauth";
 import Prompt from "./components/prompt";
 import {Settings, SettingsToggle} from "./components/settings";
@@ -17,13 +19,30 @@ let body = document.getElementById("body");
 let userToken = body.getAttribute("data-user-token");
 let sessionToken = body.getAttribute("data-session-token");
 
-const keys = new Keys();
+let store = null;
 
-document.addEventListener('keydown', e => {
-  if (!keys.isModifierKeyPressed()) {
-    document.getElementById('prompt').focus();
+if (document.querySelector("[data-page=play]")) {
+  store = makeStore();
+
+  const keys = new Keys();
+
+  document.addEventListener('keydown', e => {
+    if (!keys.isModifierKeyPressed()) {
+      document.getElementById('prompt').focus();
+    }
+  });
+
+  if ("speechSynthesis" in window) {
+    speechSynthesis.onvoiceschanged = () => {
+      let voices = _.filter(speechSynthesis.getVoices(), (voice) => {
+        return voice.name.match(/English/g);
+      });
+      voices = _.map(voices, (voice) => { return voice.name; });
+      let action = Creators.voiceSetVoices(voices);
+      store.dispatch(action);
+    };
   }
-});
+}
 
 class Client extends React.Component {
   render() {
@@ -42,6 +61,7 @@ class Client extends React.Component {
             <div className="window">
               <Terminal />
               <Settings />
+              <Modals />
               <OAuthAuthorization game={this.props.game} />
               <SettingsToggle />
               <TopDock>

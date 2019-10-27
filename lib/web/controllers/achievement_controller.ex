@@ -1,8 +1,10 @@
 defmodule Web.AchievementController do
   use Web, :controller
 
-  alias Grapevine.Achievements
-  alias Grapevine.Games
+  alias GrapevineData.Achievements
+  alias GrapevineData.Games
+
+  action_fallback(Web.FallbackController)
 
   def index(conn, %{"game_id" => game_name}) do
     with {:ok, game} <- Games.get_by_short(game_name, display: true) do

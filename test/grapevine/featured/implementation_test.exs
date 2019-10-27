@@ -2,25 +2,25 @@ defmodule Grapevine.Featured.ImplementationTest do
   use Grapevine.DataCase
 
   alias Grapevine.Featured.Implementation
-  alias Grapevine.Games
-  alias Grapevine.Statistics
+  alias GrapevineData.Games
+  alias GrapevineData.Statistics
 
   describe "determining the amount of milliseconds to delay" do
     test "for the next cycle" do
       now =
         Timex.now()
-        |> Timex.set([hour: 20, minute: 0, second: 0])
+        |> Timex.set(hour: 20, minute: 0, second: 0)
         |> DateTime.truncate(:second)
 
       delay = Implementation.calculate_next_cycle_delay(now)
 
-      assert delay == 36000000
+      assert delay == 36_000_000
     end
 
     test "process is rebooted same day but before cycle runs" do
       now =
         Timex.now()
-        |> Timex.set([hour: 4, minute: 0, second: 0])
+        |> Timex.set(hour: 4, minute: 0, second: 0)
         |> DateTime.truncate(:second)
 
       delay = Implementation.calculate_next_cycle_delay(now)

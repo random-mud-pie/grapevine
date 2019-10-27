@@ -5,7 +5,7 @@ defmodule Metrics.GameInstrumenter do
 
   use Prometheus.Metric
 
-  alias Grapevine.Presence
+  alias Socket.Presence
 
   @doc false
   def setup() do
@@ -29,10 +29,10 @@ defmodule Metrics.GameInstrumenter do
 
   def dispatch_game_count() do
     count = length(Presence.online_games())
-    :telemetry.execute([:grapevine, :games, :online], count, %{})
+    :telemetry.execute([:grapevine, :games, :online], %{count: count}, %{})
   end
 
-  def handle_event([:grapevine, :games, :online], count, _metadata, _config) do
+  def handle_event([:grapevine, :games, :online], %{count: count}, _metadata, _config) do
     Gauge.set([name: :grapevine_game_online_count], count)
   end
 

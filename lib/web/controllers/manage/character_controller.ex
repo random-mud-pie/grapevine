@@ -1,13 +1,15 @@
 defmodule Web.Manage.CharacterController do
   use Web, :controller
 
-  alias Grapevine.Characters
+  alias GrapevineData.Characters
+  alias GrapevineData.Games
 
   def index(conn, _params) do
     %{current_user: user} = conn.assigns
 
     conn
     |> assign(:characters, Characters.for(user))
+    |> assign(:games, Games.for_user(user))
     |> render("index.html")
   end
 
@@ -36,7 +38,7 @@ defmodule Web.Manage.CharacterController do
          {:ok, _character} <- Characters.deny_character(character) do
       conn
       |> put_flash(:info, "Character denied.")
-        |> redirect(to: manage_character_path(conn, :index))
+      |> redirect(to: manage_character_path(conn, :index))
     else
       _ ->
         conn

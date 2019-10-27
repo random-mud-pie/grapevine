@@ -2,9 +2,7 @@ import PropTypes from 'prop-types';
 import React, {Fragment} from "react";
 import {connect} from 'react-redux';
 
-import {
-  Creators
-} from "../redux/actions";
+import {Creators} from "../redux/actions";
 
 import {ClientSocket} from "../socket";
 
@@ -25,23 +23,12 @@ class SocketProvider extends React.Component {
   }
 
   processText() {
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-
     this.props.socketGA();
   }
 
   appendText(message) {
     this.props.socketEcho(message);
-
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
-
-    this.timer = setTimeout(() => {
-      this.processText();
-    }, 200);
+    this.processText();
   }
 
   receiveConnection(data) {

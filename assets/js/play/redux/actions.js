@@ -1,6 +1,7 @@
 import {createActions} from 'reduxsauce';
 
 export const {Types, Creators} = createActions({
+  modalsClose: ["key"],
   promptSetCurrentText: ["text"],
   promptClear: null,
   promptHistoryAdd: null,
@@ -12,10 +13,13 @@ export const {Types, Creators} = createActions({
   socketConnected: null,
   socketDisconnected: null,
   socketEcho: ["text"],
+  socketInput: ["text"],
   socketGA: null,
   socketOAuthClose: null,
   socketReceiveConnection: ({type, host, port}) => ({type: "SOCKET_RECEIVE_CONNECTION", payload: {type, host, port}}),
   socketReceiveGMCP: ["message", "data"],
   socketReceiveOAuth: ["message"],
-  socketReceiveOption: ({key, value}) => ({type: "SOCKET_RECEIVE_OPTION", key, value})
+  socketReceiveOption: ({key, value}) => ({type: "SOCKET_RECEIVE_OPTION", key, value}),
+  voiceSetVoices: ["voices"],
+  voiceSetVoice: ["voice"],
 });

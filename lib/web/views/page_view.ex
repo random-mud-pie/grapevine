@@ -3,10 +3,11 @@ defmodule Web.PageView do
 
   import Web.SocketHelper
 
-  alias Grapevine.Channels
+  alias GrapevineData.Channels
   alias Web.CurrentPlayerCountView
   alias Web.DocView
   alias Web.GameView
+  alias Web.TimeView
 
   def render("_conduct.html", _assigns) do
     :grapevine

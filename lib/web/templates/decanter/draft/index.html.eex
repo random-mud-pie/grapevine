@@ -1,0 +1,23 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><%= link("Home", to: page_path(@conn, :index)) %></li>
+    <li class="breadcrumb-item"><%= link("Decanter", to: decanter_news_path(@conn, :index)) %></li>
+    <li class="breadcrumb-item active">My News</li>
+  </ol>
+</nav>
+
+<section>
+  <nav class="header">
+    <h3 class="name">The Decanter</h3>
+  </nav>
+
+  <div class="row">
+    <%= NewsView.render("_sidebar.html", assigns) %>
+
+    <div class="col-md-9 posts list">
+      <%= Enum.map(@blog_posts, fn blog_post -> %>
+        <%= NewsView.render("_post.html", conn: @conn, blog_post: blog_post) %>
+      <% end) %>
+    </div>
+  </div>
+</section>

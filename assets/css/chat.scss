@@ -1,0 +1,56 @@
+@import "colors";
+
+@import "prompt";
+@import "terminal";
+
+.chat {
+  @include terminal();
+  @include prompt();
+
+  .terminal[data-pre='nowrap'] {
+    white-space: normal;
+  }
+
+  .connection {
+    margin-right: 16px;
+
+    .green {
+      color: $green;
+    }
+
+    .red {
+      color: $red;
+    }
+  }
+
+  .active-channel {
+    max-width: 128px;
+    margin-right: 12px;
+  }
+
+  .timestamp {
+    color: $grey;
+  }
+
+  .channel {
+    color: $purple;
+  }
+
+  .player {
+    color: $yellow;
+  }
+
+  .green {
+    color: $green;
+  }
+
+  .red {
+    color: $red;
+  }
+}
+
+.admin-chat {
+  position: relative;
+  top: auto;
+  bottom: auto;
+}

@@ -1,12 +1,11 @@
 defmodule Grapevine.TestHelpers do
-  alias Grapevine.Accounts
-  alias Grapevine.Achievements
-  alias Grapevine.Applications
-  alias Grapevine.Authorizations
-  alias Grapevine.Channels
-  alias Grapevine.Games
-  alias Grapevine.Gauges
-  alias Grapevine.Repo
+  alias GrapevineData.Accounts
+  alias GrapevineData.Achievements
+  alias GrapevineData.Authorizations
+  alias GrapevineData.Channels
+  alias GrapevineData.Gauges
+  alias GrapevineData.Games
+  alias GrapevineData.Repo
 
   def create_channel(attributes \\ %{}) do
     attributes =
@@ -24,7 +23,7 @@ defmodule Grapevine.TestHelpers do
   end
 
   def create_user(attributes \\ %{}) do
-    {:ok, user} = Accounts.register(user_attributes(attributes))
+    {:ok, user} = Accounts.register(user_attributes(attributes), fn _user -> :ok end)
     user
   end
 
@@ -65,7 +64,8 @@ defmodule Grapevine.TestHelpers do
     Map.merge(
       %{
         name: "A MUD",
-        short_name: "AM"
+        short_name: "AM",
+        description: "A MUD"
       },
       attributes
     )
@@ -82,24 +82,9 @@ defmodule Grapevine.TestHelpers do
         attributes
       )
 
-    {:ok, connection} = Games.create_connection(game, attributes)
+    {:ok, connection} = Games.create_connection(game, attributes, fn _connection -> :ok end)
 
     connection
-  end
-
-  def create_application(attributes \\ %{}) do
-    attributes =
-      Map.merge(
-        %{
-          name: "Grapevine",
-          short_name: "Grapevine"
-        },
-        attributes
-      )
-
-    {:ok, application} = Applications.create(attributes)
-
-    application
   end
 
   def presence_state(game, state) do
@@ -130,25 +115,31 @@ defmodule Grapevine.TestHelpers do
   end
 
   def create_authorization(user, game) do
-    {:ok, authorization} = Authorizations.start_auth(user, game, %{
-      "state" => "my+state",
-      "redirect_uri" => "https://example.com/oauth/callback",
-      "scope" => "profile"
-    })
+    {:ok, authorization} =
+      Authorizations.start_auth(user, game, %{
+        "state" => "my+state",
+        "redirect_uri" => "https://example.com/oauth/callback",
+        "scope" => "profile"
+      })
+
     {:ok, authorization} = Authorizations.authorize(authorization)
 
     authorization
   end
 
   def create_gauge(game, attributes) do
-    attributes = Map.merge(%{
-      name: "HP",
-      package: "Char 1",
-      message: "Char.Vitals",
-      value: "hp",
-      max: "maxhp",
-      color: "red"
-    }, attributes)
+    attributes =
+      Map.merge(
+        %{
+          name: "HP",
+          package: "Char 1",
+          message: "Char.Vitals",
+          value: "hp",
+          max: "maxhp",
+          color: "red"
+        },
+        attributes
+      )
 
     {:ok, gauge} = Gauges.create(game, attributes)
     gauge

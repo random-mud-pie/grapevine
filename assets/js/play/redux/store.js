@@ -1,10 +1,16 @@
-import {combineReducers, createStore} from 'redux';
+import {combineReducers, createStore, compose} from 'redux';
 
+import {modalReducer} from "./modalReducer";
 import {promptReducer} from "./promptReducer";
 import {settingsReducer} from "./settingsReducer";
 import {socketReducer} from "./socketReducer";
+import {voiceReducer} from "./voiceReducer";
 
 // Selectors
+
+export const getModals = (state) => {
+  return state.modal.modals;
+};
 
 export const getPromptState = (state) => {
   return state.prompt;
@@ -47,7 +53,13 @@ export const getSocketPromptType = (state) => {
 };
 
 export const getSocketLines = (state) => {
-  return getSocketState(state).lines;
+  let socketState = getSocketState(state);
+
+  if (socketState.lastLine) {
+    return [...socketState.lines, socketState.lastLine];
+  };
+
+  return socketState.lines;
 };
 
 export const getSocketGMCP = (state) => {
@@ -58,15 +70,38 @@ export const getSocketOAuth = (state) => {
   return getSocketState(state).oauth;
 };
 
+export const getVoiceState = (state) => {
+  return state.voice;
+};
+
+export const getVoiceSynthesisPresent = (state) => {
+  return getVoiceState(state).synthesisPresent;
+};
+
+export const getVoiceCurrentVoice = (state) => {
+  return getVoiceState(state).currentVoice;
+};
+
+export const getVoiceVoices = (state) => {
+  return getVoiceState(state).voices;
+};
+
 // Reducers
 
 let rootReducer = combineReducers({
+  modal: modalReducer,
   prompt: promptReducer,
   settings: settingsReducer,
-  socket: socketReducer
+  socket: socketReducer,
+  voice: voiceReducer
 });
 
-export const store = createStore(
-  rootReducer,
-  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
-);
+const composeEnhancers =
+  typeof window === 'object' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?
+    window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({}) : compose;
+
+const enhancer = composeEnhancers();
+
+export const makeStore = () => {
+  return createStore(rootReducer, enhancer);
+};

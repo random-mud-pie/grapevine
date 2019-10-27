@@ -15,25 +15,10 @@ defmodule Grapevine.Client do
   @doc """
   Send a tell to a player
   """
-  @callback send_tell(to_game :: String.t(), to_player :: String.t(), message :: String.t()) :: :ok
+  @callback send_tell(to_game :: String.t(), to_player :: String.t(), message :: String.t()) ::
+              :ok
 
   @client Application.get_env(:grapevine, :modules)[:client]
-
-  @doc """
-  Local client presence data
-
-  Gets injected to the online games
-  """
-  def presence() do
-    %Grapevine.Presence.State{
-      game: %Grapevine.Client.Application{},
-      players: ["system"],
-      channels: [],
-      supports: ["channels", "players", "tells"],
-      type: :grapevine,
-      timestamp: Timex.now()
-    }
-  end
 
   @doc """
   Broadcast a message to a channel

@@ -12,17 +12,18 @@ defmodule Grapevine.Application do
 
     children = [
       cluster_supervisor(),
-      supervisor(Grapevine.Repo, []),
       supervisor(Web.Endpoint, []),
+      {Socket.Application, [name: Socket.Application]},
+      {Grapevine.Presence, [name: Grapevine.Presence]},
       {Grapevine.PlayerPresence, [name: Grapevine.PlayerPresence]},
-      {Grapevine.Presence, []},
       {Grapevine.Client.Server, [name: Grapevine.Client.Server]},
       {Metrics.Server, []},
-      {Telemetry.Poller, telemetry_opts()},
+      {:telemetry_poller, telemetry_opts()},
       {Grapevine.Telnet.Worker, [name: Grapevine.Telnet.Worker]},
       {Grapevine.CNAMEs, [name: Grapevine.CNAMEs]},
       {Grapevine.Featured, [name: Grapevine.Featured]},
-      {Grapevine.Statistics.Server, []}
+      {Grapevine.Statistics.Server, []},
+      {Grapevine.Notifications, []}
     ]
 
     Metrics.Setup.setup()
@@ -30,7 +31,7 @@ defmodule Grapevine.Application do
     report_errors = Application.get_env(:grapevine, :errors)[:report]
 
     if report_errors do
-      {:ok, _} = Logger.add_backend(Sentry.LoggerBackend)
+      Logger.add_backend(Sentry.LoggerBackend)
     end
 
     start_telnet_application()
@@ -57,8 +58,9 @@ defmodule Grapevine.Application do
     [
       measurements: [
         {Metrics.GameInstrumenter, :dispatch_game_count, []},
-        {Metrics.SocketInstrumenter, :dispatch_socket_count, []},
+        {Metrics.SocketInstrumenter, :dispatch_socket_count, []}
       ],
+      name: Grapevine.Poller,
       period: 10_000
     ]
   end
@@ -67,6 +69,7 @@ defmodule Grapevine.Application do
   defp start_telnet_application() do
     if @env == :dev do
       :application.start(:telnet)
+      :application.start(:grapevine_telnet)
     end
   end
 end

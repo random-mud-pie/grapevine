@@ -2,17 +2,17 @@
 <html lang="en">
   <%= render("_head.html", assigns) %>
 
-  <body id="body" data-user-token="<%= @conn |> user_token() %>">
+  <body id="body" data-user-token="<%= @conn |> user_token() %>" data-live="true">
     <%= render("_header.html", assigns) %>
 
     <main>
       <div class="container">
-        <%= if flash = get_flash(@conn, :info) do %>
+        <%= if (flash = get_flash(@conn, :info)) && Map.get(assigns, :layout_flash, true) do %>
           <div class="alert alert-primary" role="alert">
             <%= flash %>
           </div>
         <% end %>
-        <%= if flash = get_flash(@conn, :error) do %>
+        <%= if (flash = get_flash(@conn, :error)) && Map.get(assigns, :layout_flash, true) do %>
           <div class="alert alert-danger" role="alert">
             <%= flash %>
           </div>
@@ -34,7 +34,7 @@
         |
         <%= link("MSSP Check", to: mssp_path(@conn, :index)) %>
         <%= link(to: "https://www.patreon.com/exventure", target: "_blank", class: "mb-4 float-right") do %>
-          <%= img_tag("/images/patron.png") %>
+          <%= img_tag("/images/patron.png", alt: "Patreon") %>
         <% end %>
       </div>
     </footer>

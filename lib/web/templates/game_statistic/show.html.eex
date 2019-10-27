@@ -1,0 +1,55 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><%= link("Home", to: page_path(@conn, :index)) %></li>
+    <li class="breadcrumb-item"><%= link("Games", to: game_path(@conn, :index)) %></li>
+    <li class="breadcrumb-item"><%= link(@game.name, to: game_path(@conn, :show, @game.short_name)) %></li>
+    <li class="breadcrumb-item active" aria-current="page">Stats</li>
+  </ol>
+</nav>
+
+<section class="game">
+  <%= GameView.hero_img(@game) %>
+
+  <div class="container">
+    <nav>
+      <h3 class="name">
+        <%= GameView.online_status(@game) %>
+
+        <%= @game.name %> - Stats
+
+        <%= if @game.homepage_url do %>
+          <span class="home-page"><%= link(@game.homepage_url, to: @game.homepage_url) %></span>
+        <% end %>
+      </h3>
+    </nav>
+
+    <%= if @game.display_player_graph do %>
+      <div class="mt-3">
+        <h3>Last 48 Hours of Players</h3>
+        <span>Every Hour</span>
+
+        <div id="player-stats-hours" class="chart" data-type='48-hours' data-url="<%= game_statistic_path(@conn, :players, @game.short_name, series: "48-hours") %>">
+          <canvas></canvas>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <h3>Last Week of Players</h3>
+        <span>Every 4 Hours</span>
+
+        <div id="player-stats-week" class="chart" data-type="week" data-url="<%= game_statistic_path(@conn, :players, @game.short_name, series: "week") %>">
+          <canvas></canvas>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <h3>Time of Day</h3>
+        <span>Last 7 days of counts broken up by time of day</span>
+
+        <div id="player-stats-week" class="chart" data-type="tod" data-url="<%= game_statistic_path(@conn, :players, @game.short_name, series: "tod") %>">
+          <canvas></canvas>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>

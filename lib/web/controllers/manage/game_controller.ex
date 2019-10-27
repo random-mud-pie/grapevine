@@ -1,18 +1,10 @@
 defmodule Web.Manage.GameController do
   use Web, :controller
 
-  alias Grapevine.Games
-  alias Telnet.Presence, as: TelnetPresence
+  alias GrapevineData.Games
+  alias GrapevineTelnet.Presence, as: TelnetPresence
 
   plug(Web.Plugs.VerifyUser)
-
-  def index(conn, _params) do
-    %{current_user: user} = conn.assigns
-
-    conn
-    |> assign(:games, Games.for_user(user))
-    |> render("index.html")
-  end
 
   def show(conn, %{"id" => id}) do
     %{current_user: user} = conn.assigns
@@ -67,7 +59,7 @@ defmodule Web.Manage.GameController do
       {:error, :not_found} ->
         conn
         |> put_flash(:error, "Could not find that game.")
-        |> redirect(to: manage_game_path(conn, :index))
+        |> redirect(to: manage_setting_path(conn, :show))
     end
   end
 
@@ -103,7 +95,7 @@ defmodule Web.Manage.GameController do
       {:error, _} ->
         conn
         |> put_flash(:error, "An error occurred, please try again.")
-        |> redirect(to: manage_game_path(conn, :index))
+        |> redirect(to: manage_setting_path(conn, :show))
     end
   end
 end
